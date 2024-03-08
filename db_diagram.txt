@@ -1,0 +1,7 @@
+Table stock_prices {
+  id INTEGER [pk]
+  ticker TEXT [not null]
+  price REAL [not null]
+  date TIMESTAMP [not null]
+}
+
