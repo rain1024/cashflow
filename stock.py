@@ -54,19 +54,21 @@ def import_data(filename):
     conn.close()
     click.echo(f'Data imported successfully from {filename}')
 
-def viz_ticker(ticker):
+def viz_tickers(tickers):
     conn = sqlite3.connect('stocks.db')
     cur = conn.cursor()
-    query_sql = '''SELECT date, price FROM stock_prices WHERE ticker = ? ORDER BY date'''
-    cur.execute(query_sql, (ticker,))
-    rows = cur.fetchall()
-    dates = [row[0] for row in rows]
-    prices = [row[1] for row in rows]
-
-    # Plotting
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=dates, y=prices, mode='lines', name=ticker))
-    fig.update_layout(title=f'Stock Prices for {ticker}',
+
+    for ticker in tickers:
+        query_sql = '''SELECT date, price FROM stock_prices WHERE ticker = ? ORDER BY date'''
+        cur.execute(query_sql, (ticker,))
+        rows = cur.fetchall()
+        if rows:
+            dates = [row[0] for row in rows]
+            prices = [row[1] for row in rows]
+            fig.add_trace(go.Scatter(x=dates, y=prices, mode='lines', name=ticker))
+    
+    fig.update_layout(title=f'Stock Prices Comparison',
                       xaxis_title='Date',
                       yaxis_title='Price')
     fig.show()
@@ -87,10 +89,14 @@ def import_command(filename):
     import_data(filename)
 
 @cli.command('viz')
-@click.argument('ticker')
-def viz_command(ticker):
-    """Import data from a JSON file into the database."""
-    viz_ticker(ticker)
+@click.argument('tickers', nargs=-1)
+def viz_command(tickers):
+    """Visualize the price data for given tickers."""
+    if not tickers:
+        click.echo("Please provide at least one ticker.")
+        return
+    viz_tickers(tickers)
+
 
 if __name__ == '__main__':
     cli()
